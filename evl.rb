@@ -1,30 +1,17 @@
 class Person
-  attr_reader :id, :parents, :life, :liberty, :property, :desired_liberty, :desired_property, :productivity, 
+  attr_reader :id, :liberty, :property, :desired_liberty, :desired_property, :pay_per_round, :is_subscribed_to
 
-  def initialize(id, parents, liberty, property, desired_liberty, desired_property, productivity)
+  def initialize(id, liberty, property, desired_liberty, desired_property)
     # attributes
     @id = id
-    @life = 1
-    @parents = parents
     @liberty = liberty
     @property = property
     @desired_liberty = desired_liberty
     @desired_property = desired_property
-    @productivity = productivity
-    
-    # predicate states
-    @has_robbed = []
-    @has_been_robbed_by = []
-    @has_murdered = []
-    @has_worked_for = []
-    @has_employed = []
-    @enslaved_by = []
-    @enslaves = []
-  end
+    @pay_per_round = rand(10) # More? Less?
 
-  def die
-    @life = 0
-    # Does this have an effect on the liberty or property of others?
+    # loyalty predicate
+    @is_subscribed_to = Hash.new
   end
 
   def lose_liberty(amount)
@@ -43,45 +30,21 @@ class Person
     @property = @property + amount
   end
 
-  def murder(other)
-    # Benefits?  Costs?
-    other.die  
+  def subscribe_to(organization)
+    # costs something
+    self.lose_property(organization.subscriber_cost_amount)
+    # gains soemthing else
+    self.gain_liberty(organization.subscriber_benefit_amount)
+    # default subscriber loyalty is 50.
+    organization.add_subscriber({:subscriber => self.id, :loyalty => 50})
   end
 
-  def create(other)
-    # What rules govern this?
+  def unsubscribe_from(organization)
+    # is there an exit cost?
   end
 
-  def enslave(other)
-    # Gain 
-  end
-
-  def release(other)
-    # Costs both property and liberty.  Why do this?  Uncaptured externality.
-  end
-
-  def buy_labor_from(other)
-    # Costs property but gains an amount of liberty equal to a 
-    # random fraction of other's productivity.
-    self.lose_property(property_amount)
-    self.gain_liberty(liberty_amount/2)
-    other.lose_liberty(liberty_amount)
-    other.gain_property(property_amount)
-    @has_employed << other
-  end
-
-  def sell_labor_to(other)
-    # Costs liberty but gains a random amount of property from other
-  end
-
-  def steal_from(other)
-    # Costs nothing but gains random amount of property from other
-    # All benefit, no cost...need some additional attributes to capture
-    # what now exist as externalities.
-  end
-
-  def give_to(other)
-    # Gains nothing but gives random amount of self's property to other
+  def voice_to(organization)
+    # this costs the organization
   end
 end
 
@@ -90,7 +53,11 @@ i = 0
 people = []
 
 10.times do
-  person = Person.new(i)
+  prop = rand(100)
+  lib = rand(100)
+  dprop = prop + (rand(100 - prop))
+  dlib = lib + (rand(100 - lib))
+  person = Person.new(i, lib, prop, dlib, dprop)
   i = i + 1
   people << person
 end
