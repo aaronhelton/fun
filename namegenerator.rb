@@ -1,17 +1,22 @@
+#!/bin/env ruby
+
 require 'getoptlong'
+require 'unicode_utils/u'
 
 # This is a condensed copy of the work done by Alan Skorkin here: http://www.skorks.com/2009/07/how-to-write-a-name-generator-in-ruby/
 
 class ArgumentParser
-  attr_reader :data_file, :words_to_generate
+  attr_reader :data_file, :words_to_generate, :reverse
   
   def initialize
     @opts = GetoptLong.new(
 	  ["--datafile", "-d", GetoptLong::OPTIONAL_ARGUMENT],
-	  ["--number-of-words", "-n", GetoptLong::OPTIONAL_ARGUMENT]
+	  ["--number-of-words", "-n", GetoptLong::OPTIONAL_ARGUMENT],
+          ["--reverse", "-r", GetoptLong::OPTIONAL_ARGUMENT]
 	)
 	@data_file = "data.txt"
 	@words_to_generate = 10
+        @reverse = false
   end
   
   def parse_arguments
@@ -21,6 +26,8 @@ class ArgumentParser
 	    @data_file = arg
 	  when '--number-of-words'
 	    @words_to_generate = arg
+          when '--reverse'
+            @reverse = true
 	  end
 	end
   end
@@ -75,7 +82,7 @@ class NameGenerator
   def generate_names(start_pairs, count = 10)
     names = []
     count.times do |i|
-      names.push(generate_name(start_pairs[rand start_pairs.length]).capitalize)
+      names.push(generate_name(start_pairs[rand start_pairs.length]))
     end
     return names
   end
@@ -87,4 +94,10 @@ data_handler = DataHandler.new
 data_handler.read_data_file(argument_parser.data_file)
 name_generator = NameGenerator.new(data_handler.follower_letters)
 names = name_generator.generate_names(data_handler.start_pairs, argument_parser.words_to_generate)
-names.each {|name| puts name}
+names.each do |name| 
+  if argument_parser.reverse
+    puts name.reverse
+  else
+    puts name
+  end
+end
