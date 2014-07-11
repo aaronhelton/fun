@@ -1,17 +1,25 @@
 class Person
-  attr_reader :id, :life, :liberty, :property, :desired_liberty, :desired_property
+  attr_reader :id, :parents, :life, :liberty, :property, :desired_liberty, :desired_property, :productivity, 
 
-  def initialize(id)
+  def initialize(id, parents, liberty, property, desired_liberty, desired_property, productivity)
+    # attributes
     @id = id
     @life = 1
-    @liberty = rand(100) + 1
-    @property = rand(100) + 1
-    @desired_liberty = rand(100) + 1
-    @desired_happiness = rand(100) + 1
-    @bound_to = []
-    @binds = []
+    @parents = parents
+    @liberty = liberty
+    @property = property
+    @desired_liberty = desired_liberty
+    @desired_property = desired_property
+    @productivity = productivity
+    
+    # predicate states
     @has_robbed = []
-    @was_robbed_by = []
+    @has_been_robbed_by = []
+    @has_murdered = []
+    @has_worked_for = []
+    @has_employed = []
+    @enslaved_by = []
+    @enslaves = []
   end
 
   def die
@@ -36,7 +44,8 @@ class Person
   end
 
   def murder(other)
-    # Benefits?  
+    # Benefits?  Costs?
+    other.die  
   end
 
   def create(other)
@@ -44,31 +53,35 @@ class Person
   end
 
   def enslave(other)
-    
+    # Gain 
   end
 
   def release(other)
-    # Costs both property and liberty.  Why do this?
+    # Costs both property and liberty.  Why do this?  Uncaptured externality.
   end
 
   def buy_labor_from(other)
-
+    # Costs property but gains an amount of liberty equal to a 
+    # random fraction of other's productivity.
+    self.lose_property(property_amount)
+    self.gain_liberty(liberty_amount/2)
+    other.lose_liberty(liberty_amount)
+    other.gain_property(property_amount)
+    @has_employed << other
   end
 
   def sell_labor_to(other)
-
+    # Costs liberty but gains a random amount of property from other
   end
 
   def steal_from(other)
-    stolen = rand(other.property)
-    other.lose_property(stolen)
-    @property = @property + stolen
+    # Costs nothing but gains random amount of property from other
+    # All benefit, no cost...need some additional attributes to capture
+    # what now exist as externalities.
   end
 
-  def give_to(myself,other)
-    given = rand(myself.property)
-    other.gain_property(given)
-    @property = @property - given
+  def give_to(other)
+    # Gains nothing but gives random amount of self's property to other
   end
 end
 
