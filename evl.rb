@@ -4,7 +4,9 @@ class Person
   def initialize(id, liberty, property, desired_liberty, desired_property)
     # attributes
     @id = id
+    # liberty tops out at 100
     @liberty = liberty
+    # property has no cap
     @property = property
     @desired_liberty = desired_liberty
     @desired_property = desired_property
@@ -30,23 +32,56 @@ class Person
     @property = @property + amount
   end
 
+  def get_paid
+    @property = @property + @pay_per_round
+  end
+
+  def pay_to(organization)
+    @property = 
+  end
+
   def subscribe_to(organization)
     # costs something
-    self.lose_property(organization.subscriber_cost_amount)
+    self.lose_property(organization.subscriber_fee_initial)
     # gains soemthing else
     self.gain_liberty(organization.subscriber_benefit_amount)
     # default subscriber loyalty is 50.
-    organization.add_subscriber({:subscriber => self.id, :loyalty => 50})
+    organization.add_subscriber({:subscriber => self.id, :})
+    
   end
 
   def unsubscribe_from(organization)
     # is there an exit cost?
+    
   end
 
   def voice_to(organization)
     # this costs the organization
+    voice_strength = 
+  end
+
+  def can_pay_to?(organization)
+    #if @property - organization.subscribersubscriber_fee_per_round >= 0
+    #  return true
+    #else
+    #  return false
+    #end
+  end
+
+  def can_switch_to?(origin_organization,destination_organization)
+    switching_cost = origin_organization.unsubscribe_cost + destination_organization.subscribe_cost_initial
+    if @property - switching_cost >= 0
+      return true
+    else
+      return false
+    end
+  end
+
+  def can_voice_to?(organization)
+
   end
 end
+
 
 # start with 10 people
 i = 0
