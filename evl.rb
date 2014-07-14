@@ -1,15 +1,13 @@
 class Person
   attr_reader :id, :liberty, :property, :desired_liberty, :desired_property, :pay_per_round, :is_subscribed_to
 
-  def initialize(id, liberty, property, desired_liberty, desired_property)
+  def initialize(id, liberty, property, pay_per_round)
     # attributes
     @id = id
     # liberty tops out at 100
     @liberty = liberty
     # property has no cap
     @property = property
-    @desired_liberty = desired_liberty
-    @desired_property = desired_property
     @pay_per_round = rand(10) # More? Less?
 
     # loyalty predicate
@@ -33,42 +31,40 @@ class Person
   end
 
   def get_paid
-    @property = @property + @pay_per_round
+    self.gain_property(@pay_per_round)
   end
 
   def pay_to(organization)
-    @property = 
+    self.lose_property(organization.subscriber_fee_per_round)
   end
 
-  def subscribe_to(organization)
-    # costs something
+  def subscribe_to(organization,loyalty)
+    # costs something, but this could be negative.
     self.lose_property(organization.subscriber_fee_initial)
-    # gains soemthing else
-    self.gain_liberty(organization.subscriber_benefit_amount)
-    # default subscriber loyalty is 50.
-    organization.add_subscriber({:subscriber => self.id, :})
-    
+    # gain something
+    self.gain_liberty(organization.afforded_liberty_per_customer)
+    @is_subscribed_to = {	:id => organization.id, 
+				:loyalty => loyalty, 
+				:current_subscriber_fee_per_round => organization.subscriber_fee_per_round,
+				:current_afforded_liberty => organization.afforded_liberty }
   end
 
   def unsubscribe_from(organization)
     # is there an exit cost?
+    self.lose_property(organization.subscriber_exit_cost)
+    self.lose_liberty(@is_subscribed_to.current_afforded_liberty)
+    @is_subscribed_to = Hash.new
+  end
+
+  def voice_to(organization,action,amount)
+    # this costs the organization
     
   end
 
-  def voice_to(organization)
-    # this costs the organization
-    voice_strength = 
-  end
-
   def can_pay_to?(organization)
-    #if @property - organization.subscribersubscriber_fee_per_round >= 0
-    #  return true
-    #else
-    #  return false
-    #end
   end
 
-  def can_switch_to?(origin_organization,destination_organization)
+  def can_switch_from_to?(origin_organization,destination_organization)
     switching_cost = origin_organization.unsubscribe_cost + destination_organization.subscribe_cost_initial
     if @property - switching_cost >= 0
       return true
@@ -77,8 +73,19 @@ class Person
     end
   end
 
-  def can_voice_to?(organization)
-
+  def choose_action
+    switch_probability = 0 
+    # Actor patterns might be appropriate here
+    if (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) > 1
+      switch_probability = switch_probability + 10
+      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty + 2
+    elsif (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) = 1
+      switch_probability = switch_probability + 15
+      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty + 1
+    elsif (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) < 1
+      switch_probability = switch_probability + 25
+      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty - 2
+    end
   end
 end
 
