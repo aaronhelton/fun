@@ -1,5 +1,5 @@
 class Person
-  attr_reader :id, :liberty, :property, :desired_liberty, :desired_property, :pay_per_round, :is_subscribed_to
+  attr_reader :id, :liberty, :property, :pay_per_round, :is_subscribed_to
 
   def initialize(id, liberty, property, pay_per_round)
     # attributes
@@ -8,7 +8,7 @@ class Person
     @liberty = liberty
     # property has no cap
     @property = property
-    @pay_per_round = rand(10) # More? Less?
+    @pay_per_round = rand(10) # More? Less? Any ability to change it later?
 
     # loyalty predicate
     @is_subscribed_to = Hash.new
@@ -38,57 +38,94 @@ class Person
     self.lose_property(organization.subscriber_fee_per_round)
   end
 
-  def subscribe_to(organization,loyalty)
-    # costs something, but this could be negative.
-    self.lose_property(organization.subscriber_fee_initial)
-    # gain something
-    self.gain_liberty(organization.afforded_liberty_per_customer)
-    @is_subscribed_to = {	:id => organization.id, 
-				:loyalty => loyalty, 
-				:current_subscriber_fee_per_round => organization.subscriber_fee_per_round,
-				:current_afforded_liberty => organization.afforded_liberty }
-  end
-
-  def unsubscribe_from(organization)
-    # is there an exit cost?
-    self.lose_property(organization.subscriber_exit_cost)
-    self.lose_liberty(@is_subscribed_to.current_afforded_liberty)
-    @is_subscribed_to = Hash.new
-  end
-
   def voice_to(organization,action,amount)
     # this costs the organization
+  end
+
+  def consider(offer)
+    # probability of switching now?
+    switch_base_probability = 100 - self.is_subscribed_to[:loyalty]
+    affordability_additive = 0
+
+    # can person afford it?
+    if self.property >= offer.subscribe_cost_initial && self.pay_per_round >= offer.subscribe_cost_per_round
+      # yes, but affordability isn't worth much
+      # It would be better to test relative affordability...
+      affordability_additive = 10
+    elsif self.property < offer.subscribe_cost_initial
+      # nope
+      self.reject(offer)
+    elsif self.pay_per_round < offer.subscribe_cost_per_round
+      # can afford it NOW, but it's inadvisable
+      affordability_additive = 5
+    end
+
+    # effect on liberty?
+    liberty_additive = offer.liberty_afforded - self.liberty
+    # we can also know what factor of the offer was (un)attractive...
+    lower_price = 0
+    higher_price = 0
+    more_liberty = 0
+    less_liberty = 0
+
+    if affordability_additive < 0
+      higher_price = 1
+    elsif affordability_additive > 0
+      lower_price = 1
+    elsif liberty_additive < 0
+      less_liberty = 2
+    elsif liberty_additive > 0
+      more_liberty = 2
+    end
+    # this sends an imperfect signal, by design, to the offering organization; 
+    # the organization can't know precisely why the offer was rejected or accepted.
+    # possible outcomes: 0: neither, 1: affordability, 2: liberty, 3: both
+    reason_signal = lower_price + higher_price + more_liberty + less_liberty
+      
+    switch_probability = switch_base_probability + affordability_additive + liberty_additive
     
-  end
-
-  def can_pay_to?(organization)
-  end
-
-  def can_switch_from_to?(origin_organization,destination_organization)
-    switching_cost = origin_organization.unsubscribe_cost + destination_organization.subscribe_cost_initial
-    if @property - switching_cost >= 0
-      return true
-    else
-      return false
+    # moment of truth
+    r = rand() * 100
+    if switch_probability <= 0 || r > switch_probability
+      self.reject(offer,reason_signal)
+    elsif r <= switch_probability
+      self.accept(offer,reason_signal)
     end
   end
 
-  def choose_action
-    switch_probability = 0 
-    # Actor patterns might be appropriate here
-    if (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) > 1
-      switch_probability = switch_probability + 10
-      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty + 2
-    elsif (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) = 1
-      switch_probability = switch_probability + 15
-      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty + 1
-    elsif (@is_subscribed_to.current_subscriber_fee_per_round / @is_subscribed_to.current_afforded_liberty) < 1
-      switch_probability = switch_probability + 25
-      @is_subscribed_to.loyalty = @is_subscribed_to.loyalty - 2
+  def accept(offer,loyalty)
+    @is_subscribed_to = {  :organization => offer.organization, 
+			   :loyalty => loyalty,
+                           :paid_subscribe_cost_initial => offer.subscribe_cost_initial,
+                           :current_subscribe_cost_per_round => offer.subscribe_cost_per_round,
+                           :current_afforded_liberty => offer.afforded_liberty }
+  end
+
+  def reject(offer)
+  end
+
+  def browse_offers(offers)
+    offers.each do |offer|
+      # consider offer: if lower cost and higher liberty, probably switch
+      # if higher cost and lower liberty, probably stay
+      # if costs more than existing property, stay
+      # if costs more than existing pay per round, probably stay
+      # if can afford and grants liberty, probability of joining is 1 in organizations.length
     end
   end
 end
 
+class Offer
+  attr_reader :id, :organization_id, :subscribe_cost_initial, :subscribe_cost_per_round, :liberty_afforded
+
+  def initialize(id, organization, subscribe_cost_initial, subscribe_cost_per_round)
+    @id = id
+    @organization_id = organization_id
+    @subscribe_cost_initial = subscribe_cost_initial
+    @subscribe_cost_per_round = subscribe_cost_per_round
+    @liberty_afforded = liberty_afforded
+  end 
+end
 
 # start with 10 people
 i = 0
