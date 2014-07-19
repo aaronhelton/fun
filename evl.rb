@@ -93,26 +93,20 @@ class Person
     end
   end
 
-  def accept(offer,loyalty)
+  def accept(offer,reason_signal)
+    loyalty = 50	# really we should be able to do better...
     @is_subscribed_to = {  :organization => offer.organization, 
 			   :loyalty => loyalty,
                            :paid_subscribe_cost_initial => offer.subscribe_cost_initial,
                            :current_subscribe_cost_per_round => offer.subscribe_cost_per_round,
                            :current_afforded_liberty => offer.afforded_liberty }
+    organization.signal('accept',reason_signal)
   end
 
   def reject(offer)
+    organization.signal('reject',reason_signal)
   end
 
-  def browse_offers(offers)
-    offers.each do |offer|
-      # consider offer: if lower cost and higher liberty, probably switch
-      # if higher cost and lower liberty, probably stay
-      # if costs more than existing property, stay
-      # if costs more than existing pay per round, probably stay
-      # if can afford and grants liberty, probability of joining is 1 in organizations.length
-    end
-  end
 end
 
 class Offer
@@ -125,6 +119,51 @@ class Offer
     @subscribe_cost_per_round = subscribe_cost_per_round
     @liberty_afforded = liberty_afforded
   end 
+end
+
+class Organization
+  attr_reader :id, :viability, :current_reserve, :fixed_cost_per_round, :cost_per_unit_liberty, :signal, :subscribers
+
+  def initialize(id, fixed_cost_per_round, cost_per_unit_liberty)
+    @id = id
+    @fixed_cost_per_round = fixed_cost_per_round
+    @cost_per_unit_liberty = cost_per_unit_liberty
+    @signal = Hash.new
+    @subscribers = Hash.new
+    @viability = 1 # ???
+  end
+
+  def publish_offer(offers_count)
+    # parse out signal if there's anything
+    if @signal.length > 0
+      if @signal[:accepts] > @signal[:rejects]
+        if @signal[:accepts][:reason] == 1
+          # raise price for this offer
+        elsif @signal[:accepts][:reason] == 2
+          # decrease benefit for this offer
+        else
+          # ???
+        end
+      elsif @signal[:rejects] > @signal[:accepts]
+
+      else
+        #do something random?
+      end
+    else
+      # do something random
+    end
+
+    offer = { :id = offers_count + 1,
+	      :organization_id = @id,
+              :subscribe_cost_initial = subscribe_cost_initial,
+              :subscribe_cost_per_round = subscribe_cost_per_round,
+              :liberty_afforded = liberty_afforded }
+    return offer
+  end
+
+  def subscribe(person)
+
+  end
 end
 
 # start with 10 people
