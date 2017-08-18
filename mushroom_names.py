@@ -1,20 +1,27 @@
 #! /usr/bin/env python
 
-# \xc2\xa0
-
 # open our input files
-mushrooms = open('mushrooms.txt','r').read().splitlines()
-monsters = open('monsters.txt','r').read().splitlines()
+mushrooms_a = open('mushroom_a.txt','r').read().splitlines()
+mushrooms_b = open('mushroom_b.txt','r').read().splitlines()
+mushrooms_c = open('mushroom_c.txt','r').read().splitlines()
+
+patterns = ['ac','abc','bc','bbc','bac']
 
 import random
 
 # Make 10 possibilities
 for i in range(0,10):
-  rand_s = random.choice(random.choice(mushrooms).split(' '))
-  rand_m = random.choice(monsters)
+  out_string = []
+  rand_pattern = random.choice(patterns)
+  for p in rand_pattern:
+    if p == 'a':
+      possess = random.choice([0,1])
+      rand_a = random.choice(mushrooms_a)
+      if possess == 1:
+        rand_a = rand_a + "'s"
+      out_string.append(rand_a)
+    else:
+      rand_x = random.choice(eval("mushrooms_" + p))
+      out_string.append(rand_x)
 
-  possess = random.choice([0,1])
-  if possess == 1:
-    rand_m = rand_m + "'s"
-
-  print(rand_m,rand_s)
+  print(' '.join(out_string))
